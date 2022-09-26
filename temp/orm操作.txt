@@ -1,0 +1,199 @@
+from app01 import models  # 1.导入自己创建的模型类
+
+# 2.filter查询方法，语法是:models.类名.objects.filter()，filter内可以查询多个参数，默认是and连接，等于SQL语法的where方法！，不传参时代表查所有
+
+res = models.MyModle.objects.filter(username=username)
+# 该方法有一个返回值，返回的是一个queryset对象，该对象可以看成是列表套字典的形式，列表里面套着一个个数据对象，形式为：[数据对象1，数据对象2]
+# queryset列表也支持索引，切片操作，但是不支持负数索引，可以当成列表套字典的形式for循环
+
+user_obj = res[0]  # 得到的是具体的数据对象，但是官方不推荐使用索引的方式取到具体的数据对象，它推荐的是res.first()方法取到列表里的第一个数据对象！
+
+print(user_obj.username)  # 通过点大法，即.属性的方法得到具体的值
+
+# all方法查询User表的所有数据，返回的是一个queryset对象列表，
+user_queryset = models.User.objects.all()
+
+# create增加数据方法，语法是:models.类名.objects.create()
+res = models.MyModle.objects.create(username=username,password=password)
+# 该方法也有一个返回值，返回的是当前这个数据对象
+print(res.username,res.password) # 可以通过点属性的方法，查看到对应属性的值
+
+obj = models.User(username=username,password=password)
+obj.save() # 保存数据到数据库
+
+# 查出id为什么的对象，然后进行批量更新。filter可以查所有，也可以查具体
+models.User.objects.filter(id=edit_id).update(username=username,password=password)
+
+obj = models.User.objects.filter(id=edit_id).first() #拿到待修改的对象
+obj.username = username # 采用给该对象属性重新赋值的方法修改数据
+obj.password = password
+obj.save() # 最后赋值完记得需咬保存
+
+# 先filter查出需要删除的对象，然后.delete（）方法
+models.User.objects.filter(id=delete_id).delete() # 这里是把filter查出来的queryset对象里全部删除了，有几个删几个。
+# 这里的id可以改写成pk，用了pk就不需要知道表的主键是id还是其他什么了！
+
+res = models.User.objects.filter(id=delete_id).first()
+res.delete()  # 单一删除
+
+# 1.all()  查询所有数据
+
+# 2.filter()     带有过滤条件的查询，拿到的是一个queryset对象列表
+
+# 3.get()        直接拿数据对象 但是条件不存在直接报错
+
+# 4.first()      拿queryset里面第一个元素
+# res = models.User.objects.all().first()
+# print(res) # 拿到queryset对象列表里的第一个数据对象
+
+# 5.last()
+# res = models.User.objects.all().last()
+# print(res) # 同上，拿到的是最好一个
+
+# 6.values()  可以指定获取的数据字段  select name,age from ...
+# res = models.User.objects.values('name','age')
+# print(res)  # 结果为：列表套字典<QuerySet [{'name': 'jason', 'age': 18}, {'name': 'egonPPP', 'age': 84}]>
+
+# 7.values_list()
+# res = models.User.objects.values_list('name','age')
+# print(res) # 结果为：列表套元祖，<QuerySet [('jason', 18), ('egonPPP', 84)]>
+
+# 8.query
+#  print(res.query)  # 查看内部封装的sql语句
+#  上述查看sql语句的方式  只能用于queryset对象
+#  只有queryset对象才能够点击query查看内部的sql语句
+
+# 9.distinct()  去重
+# res = models.User.objects.values('name','age').distinct()
+# print(res)
+"""
+去重一定要是一模一样的数据
+如果带有主键那么肯定不一样 你在往后的查询中一定不要忽略主键
+"""
+
+# 10.order_by()
+# res = models.User.objects.order_by('age')  # 默认升序
+# res = models.User.objects.order_by('-age')  # 降序
+# print(res)
+
+# 10.reverse()  反转的前提是 数据已经排过序了  order_by()
+# res = models.User.objects.all()
+# res1 = models.User.objects.order_by('age').reverse()
+# print(res,res1)
+
+# 11.count()  统计当前数据的个数
+# res = models.User.objects.count()
+# print(res)
+
+# 12.exclude()  排除在外
+# res = models.User.objects.exclude(name='jason')
+# print(res)
+
+# 13.exists()  #基本用不到因为数据本身就自带布尔值  返回的是布尔值
+# res = models.User.objects.filter(pk=10).exists() # 判读主键为10的是否存在，返回是布尔值
+# print(res)
+
+__exact:等值查询
+__contains:包含指定值--区分大小写   a2=Book.objects.filter(name____contains=‘n’) 查询出名字里包含n的
+__icontains:包含指定值--忽略大小写
+__startwith:以xxx开始
+__endwith:以xxx结尾
+__gt:大于指定值，例如：a2=Book.objects.filter(id__gt=3)
+__gte:大于等于
+__it:小于
+__ite：小于等于
+__in:查找数据是否在指定范围内 a2=Book.objects.filter(id__in=[1,3,5])
+__range:查询数据是否在指定区间范围内 a2=Book.objects.filter(id__range=[1,5]) 查询出id在1-5的收尾都要
+a2=Book.objects.filter（register_time__month='1'）:查询出月份是1月的数据
+a2=Book.objects.filter（register_time__year='2022'）:查询出年份在2022的数据
+
+
+"""
+图书和出版社：一对多关系，外键建在多的一方
+图书和作者：多对多关系，外键建在任何一方，但是推荐建在查询频率高的一方
+作者和作者详情：一对一关系，外键建在任何一方，但是推荐建在查询频率高的一方
+"""
+class Book(models.Model):
+    title = models.CharField(verbose_name='书名',max_length=32)
+    price = models.DecimalField(max_digits=8,decimal_places=2)
+    create_time = models.DateTimeField(auto_now_add=True)
+    # 一对多外键建在多的一方，to='是需要建立外键的那一个类名publish'
+    # 注意：在django2、3里面需要指定级联删除参数on_delete=models.CASCADE
+    publish = models.ForeignKey(to='Publish',on_delete=models.CASCADE)
+    # 多对多外键建在查询频率高的一方，多对多在sql语句中需要自己手动建第三张表，但是在django中，django遇到会自动帮你创建第三张表！
+
+"""
+多对多创建第三张表有三种方式：
+1.全自动：无法添加字段，扩展性不高！
+author = models.ManyToManyField(to='Author')
+2.手动：自己创建第三方表，然后关联两个外键，需要写的代码多，复杂！！
+  class Book2Author(models.Model):
+    book_id = models.ForeignKey(to='Book')
+    author_id = models.ForeignKey(to='Author')
+3.半自动（推荐，扩展性高）
+    author = models.ManyToManyField(to='Author'，through='Book2Author',through_fields=('author','book'))
+"""
+"""
+through_fields字段先后顺序
+    判断的本质：
+        通过第三张表查询对应的表 需要用到哪个字段就把哪个字段放前面
+    你也可以简化判断
+        当前表是谁 就把对应的关联字段放前面
+
+半自动:可以使用orm的正反向查询 但是没法使用add,set,remove,clear这四个方法
+"""
+
+class Publish(models.Model):
+    name = models.CharField(max_length=32)
+    addr = models.CharField(max_length=64)
+    email = models.EmailField()
+
+class Author(models.Model):
+    name = models.CharField(max_length=32)
+    age = models.IntegerField()
+    # 一对一外键建在查询频率高的一方，需要指定on_delete
+    author_detail = models.OneToOneField(to='AuthorDetail',on_delete=models.CASCADE)
+
+class AuthorDetail(models.Model):
+    phone = models.BigIntegerField()
+    addr = models.CharField(max_length=64)
+
+
+from app01 import models
+# 1.增
+# 法1：直接写book表里面的外键的实际字段名，然后指定关联publish的id就行
+models.Book.objects.create(title='活着',price=33,publish_id=1)
+# 法2：虚拟字段，传入一个具体的publish的数据对象就行
+publish_obj = models.Publish.objects.filter(pk=2).first()
+# 注意这里需要.first()一下，因为不点拿到的是queryset对象，点一下拿到queryset里的具体数据对象
+models.Book.objects.create(title='我',price=555,publish=publish_obj)
+
+# 2.删
+models.Publish.objects.filter(pk=2).delete() # 将book里关联id=2的也全部删除
+
+# 3.改
+# 法1：update里面传具体需要修改的外键字段名和值
+models.Book.objects.filter(pk=2).update(publish_id=2) # 将id为2的书的关联publish_id改成2
+# 法2：update里面传入虚拟字段publish=需要关联的publish数据对象，同增的法2
+
+
+# 1.增
+# 一本书对应多个作者，先查出这个书的对象，在通过对象.多对多字段名.add()方法关联作者id
+# add()方法里面可以法数字1,2,3，表示关联作者的主键值；还可以放具体的作者数据对象！！
+book_obj = models.Book.objects.filter(pk=1).first()
+book_obj.author.add(1,2)
+author_obj = models.Author.objects.filter(pk=1).first()
+book_obj.author.add(author_obj)
+
+# 2.删
+# 删除这边书关联的作者id为1和2的，和add方法一样也支持里面放具体的作者数据对象！！
+book_obj.author.remove(1,2)
+
+# 3.改
+# set方法修改该书关联的作者id为1和3，set方法和add方法一样也支持里面放具体的作者数据对象！！
+# 注意：set方法里面必须放一个可迭代对象，比如列表！
+book_obj.author.set([1,3])
+
+# 4.清空当前书和作者的对应关系
+book_obj.author.clear()
+
