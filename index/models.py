@@ -14,4 +14,4 @@ class AirlineUser(models.Model):
     proxy = models.CharField(max_length=50)  # 代理
     source = models.CharField(max_length=50)  # 来源
     admin = models.CharField(max_length=20)  # 操作人
-    ...
+
